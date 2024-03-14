@@ -1,23 +1,97 @@
-class Graph {
-    constructor() {
-        this.edges = new Map();
-        this.vertices = new Set();
-    }
+class WordEdge {
+    constructor(wordA, wordB, pivotA, pivotB) {
+        this.wordA = wordA;
+        this.wordB = wordB;
 
-    addEdge(x, y) {
-        // TODO: check if both vertices exist
-        this.edges.set(x, y);
-    }
-
-    hasVertex(x) {
-        return this.vertices.has(x);
-    }
-
-    addVertex(x) {
-        // TODO: check if vtx already exists
-        this.vertices.add(x);
+        this.pivotA = pivotA;
+        this.pivotB = pivotB;
     }
 }
+
+
+
+class WordGraph {
+
+
+    constructor() {
+        this.edges = [];
+        this.words = new Set();
+    }
+
+    defineWordRelationship(wordA, wordB, pivotA, pivotB) {
+        // A wordA and wordB, may have multiple pivots associated with them.
+        const dup = this.edges.find(e => {
+            if ((e.wordA == wordA && e.wordB == wordB) 
+                && (e.pivotA == pivotA && e.pivotB == pivotB)) return true;
+        })
+
+        if (dup) return null;
+
+        const edge = new WordEdge(wordA, wordB, pivotA, pivotB)
+        this.edges.push(edge);
+
+        return edge;
+    }
+
+    defineWord(word) {
+        this.words.set(word);
+    }
+
+    getWordRelationships(word) {
+        return this.edges.filter(e => e.wordA === word);
+    }
+
+}
+
+
+const words = ["pineapple", "hexagon", "watch", "bat"];
+
+const wg = new WordGraph();
+
+for (let i = 0; i < words.length; i++) {
+    const currentLetters = words[i].split("")
+
+    let wCopy = Array.from(words);
+    wCopy.splice(i, 1);
+
+    for (const word of wCopy) {
+        // We find out all possible pivots, but use only one since a word can only be connected to another once
+        let [p1, p2] = currentLetters.map((e, i) => [i, word.indexOf(e)]).filter(e => e[1] >= 0)[0];
+
+        console.log(words[i], word, p1, p2);
+        wg.defineWordRelationship(words[i], word, p1, p2);
+    }
+}
+
+
+function visitOne(start) {
+
+    return visited;
+}
+
+
+console.log(visitOne("pineapple"));
+
+
+/*
+Pineapple
+Hexagon
+Watch
+Bat
+
+HEXAGON -> WATCH, PINEAPPLE
+PINEAPPLE -> HEXAGON, BAT, WATCH
+
+      H
+      E 
+      X 
+     WATCH
+      G
+      O B
+    PINEAPPLE
+        T
+*/
+
 
 class WordMatrix {
     constructor() {
@@ -84,6 +158,14 @@ function build(...words) {
 
             g.addEdge(lp1, lp2);
             g.addEdge(lp2, lp1);
+        }
+    }
+
+
+
+    for (const letters of words) {
+        for (const letter of letters) {
+            // 
         }
     }
 
