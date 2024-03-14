@@ -9,10 +9,7 @@ class WordEdge {
 }
 
 
-
 class WordGraph {
-
-
     constructor() {
         this.edges = [];
         this.words = new Set();
@@ -27,8 +24,11 @@ class WordGraph {
 
         if (dup) return null;
 
+
         const edge = new WordEdge(wordA, wordB, pivotA, pivotB)
         this.edges.push(edge);
+
+        this.words.add(wordA)
 
         return edge;
     }
@@ -40,7 +40,6 @@ class WordGraph {
     getWordRelationships(word) {
         return this.edges.filter(e => e.wordA === word);
     }
-
 }
 
 
@@ -57,20 +56,30 @@ for (let i = 0; i < words.length; i++) {
     for (const word of wCopy) {
         // We find out all possible pivots, but use only one since a word can only be connected to another once
         let [p1, p2] = currentLetters.map((e, i) => [i, word.indexOf(e)]).filter(e => e[1] >= 0)[0];
-
-        console.log(words[i], word, p1, p2);
         wg.defineWordRelationship(words[i], word, p1, p2);
     }
 }
 
 
-function visitOne(start) {
+let start = "bat";
+let visited = [];
+let last = new Set();
 
-    return visited;
+for (let i = 0; i < words.length - 1; i++) {
+    const rels = wg.getWordRelationships(start)
+    const cur = rels.filter(e => !last.has(e.wordB))[0];
+
+    if (!cur) continue;
+
+    last.add(start);
+
+    start = cur.wordB;
+    visited.push(cur)
 }
 
+console.log(visited);
 
-console.log(visitOne("pineapple"));
+
 
 
 /*
