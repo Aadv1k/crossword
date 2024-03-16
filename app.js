@@ -1,5 +1,7 @@
 class WordEdge {
-    constructor(wordA, wordB, pivotA, pivotB) {
+    constructor(index, wordA, wordB, pivotA, pivotB) {
+        this.index = index;
+
         this.wordA = wordA;
         this.wordB = wordB;
 
@@ -17,6 +19,7 @@ class WordGraph {
 
     defineWordRelationship(wordA, wordB, pivotA, pivotB) {
         // A wordA and wordB, may have multiple pivots associated with them.
+        
         const dup = this.edges.find(e => {
             if ((e.wordA == wordA && e.wordB == wordB) 
                 && (e.pivotA == pivotA && e.pivotB == pivotB)) return true;
@@ -25,7 +28,8 @@ class WordGraph {
         if (dup) return null;
 
 
-        const edge = new WordEdge(wordA, wordB, pivotA, pivotB)
+        const index = this.edges.length;
+        const edge = new WordEdge(index, wordA, wordB, pivotA, pivotB)
         this.edges.push(edge);
 
         this.words.add(wordA)
@@ -33,53 +37,88 @@ class WordGraph {
         return edge;
     }
 
-    defineWord(word) {
-        this.words.set(word);
-    }
-
     getWordRelationships(word) {
         return this.edges.filter(e => e.wordA === word);
     }
-}
 
+    serializeFrom(...words) {
+        for (let i = 0; i < words.length; i++) {
+            const currentLetters = words[i].split("")
 
-const words = ["pineapple", "hexagon", "watch", "bat"];
+            let wCopy = Array.from(words);
 
-const wg = new WordGraph();
+            wCopy.splice(i, 1);
 
-for (let i = 0; i < words.length; i++) {
-    const currentLetters = words[i].split("")
+            for (const word of wCopy) {
+                // We find out all possible pivots, but use only one since a word can only be connected to another once
+                let [p1, p2] = currentLetters.map((e, i) => [i, word.indexOf(e)]).filter(e => e[1] >= 0)[0];
+                this.defineWordRelationship(words[i], word, p1, p2);
+            }
+        }
+    }
 
-    let wCopy = Array.from(words);
-    wCopy.splice(i, 1);
+    getNPossiblePermutations(n) {
+        let possibleConfigurations = [];
 
-    for (const word of wCopy) {
-        // We find out all possible pivots, but use only one since a word can only be connected to another once
-        let [p1, p2] = currentLetters.map((e, i) => [i, word.indexOf(e)]).filter(e => e[1] >= 0)[0];
-        wg.defineWordRelationship(words[i], word, p1, p2);
+        const startingWord = Array.from(this.words)[0]; 
+        let start = null;
+
+        for (let i = 0; i < n; i++) {
+            let current = [], visitedWords = [];
+
+            while (true) {
+                let words = wg.getWordRelationships(start?.wordB ?? startingWord)
+                let elem = words.filter(e => !visitedWords.includes(e.wordB))
+                elem = elem?.[i] ?? elem[elem.length - 1];
+
+                if (!elem) {
+                    break
+                }
+
+                visitedWords.push(elem.wordB);
+                visitedWords.push(elem.wordA);
+
+                current.push(elem);
+                start = elem;
+            }
+
+            possibleConfigurations.push(current);
+        }
+
+        return possibleConfigurations;
     }
 }
 
 
-let start = "bat";
-let visited = [];
-let last = new Set();
 
-for (let i = 0; i < words.length - 1; i++) {
-    const rels = wg.getWordRelationships(start)
-    const cur = rels.filter(e => !last.has(e.wordB))[0];
+const wg = new WordGraph();
+wg.serializeFrom("pineapple", "hexagon", "watch", "bat");
 
-    if (!cur) continue;
+let match = wg.getNPossiblePermutations(1)[0]
 
-    last.add(start);
+console.log(match);
 
-    start = cur.wordB;
-    visited.push(cur)
-}
-
-console.log(visited);
+// index: 4,
+// wordA: 'hexagon',
+// wordB: 'watch',
+// pivotA: 0,
+// pivotB: 4
 
 
+
+
+matrix.putWordAcross("hexagon", 0, 4); // x, y
+matrix.putWordDown("watch", 0, 0)
+
+
+
+/* 
+........W......
+........A......
+........T......
+........C......
+........HEXAGON
+*/
 
 
 /*
@@ -102,6 +141,7 @@ PINEAPPLE -> HEXAGON, BAT, WATCH
 */
 
 
+/*
 class WordMatrix {
     constructor() {
         this.matrix = [];
@@ -127,74 +167,7 @@ class WordMatrix {
         return [x, y]
     }
 
-    putLetterAfter(a, x, y) { /* NOT IMPLEMENTED */ }
-    putLetterBefore(a, x, y) { /* NOT IMPLEMENTED */ }
-    putLetterAbove(a, x, y) { /* NOT IMPLEMENTED */ }
-    putLetterBelow(a, x, y) { /* NOT IMPLEMENTED */ }
-}
-
-function build(...words) {
-    words = words.sort((x, y) => {
-        if (x.length > y.length) return -1;
-        if (x.length < y.length) return 1;
-        return 0
-    }).map(e => e.split(""));
-
-
-
-    let stack = [], edges = [], vertices = [];
-
-    const g = new Graph();
-    const matrix = new WordMatrix();
-
-    for (const word of words) {
-        for (let i = 0; i < word.length - 1; i++) {
-            let lp1 = word[i], 
-                lp2 = word[i+1];
-
-            if (g.hasVertex(lp2)) {
-                g.addEdge(lp1, lp2);
-                continue;
-            }
-
-            if (g.hasVertex(lp1)) { 
-                g.addEdge(lp2, lp1)
-                continue;
-            }
-
-            g.addVertex(lp1)
-            g.addVertex(lp2)
-
-            g.addEdge(lp1, lp2);
-            g.addEdge(lp2, lp1);
-        }
-    }
-
-
-
-    for (const letters of words) {
-        for (const letter of letters) {
-            // 
-        }
-    }
-
-    words.forEach(letters => {
-        let curX = 0, curY = 0;
-        for (let i = 0; i < letters.length; i++) {
-            if (!g.edges.get(letters[i])) {
-               const [x, y] = matrix.putLetter(letters[i]) ;
-               curX = x;
-               curY = y;
-            }
-
-
-        }
-    })
-
-
-
-    return []
 }
 
 
-console.log(build("bar", "baz"));
+*/
